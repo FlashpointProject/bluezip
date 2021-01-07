@@ -1,0 +1,4 @@
+__pycache__/
+bluezip.db
+flashpoint.sqlite
+DB_PATH

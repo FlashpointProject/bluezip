@@ -189,6 +189,8 @@ class Bluezip:
         os.mkdir(build_dir)
         shutil.move(game.content_path, os.path.join(build_dir, 'content'))
         sha256 = create_torrentzip(game.uid, game.platform, build_dir, dist)
+        outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
+        shutil.move(dist, outfile)
         if prev_sha256:
             if prev_sha256 == sha256:
                 pcolor('green', 'no change')
@@ -213,8 +215,6 @@ class Bluezip:
             pcolor('red', f'Error: {e} when storing {game.title}. Skipped.')
             return
         self.db.commit()
-        outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
-        shutil.move(dist, outfile)
         shutil.rmtree(tmp)
         if revision == 1:
             self.cleanup_obsolete(game, sha256)

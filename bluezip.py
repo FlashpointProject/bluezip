@@ -13,6 +13,7 @@ import socket
 import json
 import time
 import sys
+import re
 import os
 
 import yaml
@@ -162,7 +163,7 @@ class Bluezip:
         exclude = self.settings['obsolete_exclude'].split(',')
         obsolete = list()
         for (fname,) in c:
-            contentless = fname.replace('content/', '')
+            contentless = re.sub('^content/', '', fname)
             path = os.path.abspath(os.path.join(htdocs, contentless))
             rel = os.path.relpath(path, htdocs)
             if os.path.isfile(path):

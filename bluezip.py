@@ -229,13 +229,22 @@ class Bluezip:
 
     def process_archive(self, fname, from_db=False):
         tmp = tempfile.mkdtemp()
-        curation = os.path.join(tmp, 'curation')
-        subprocess.check_call(['bin/7za', 'x', f'-o{curation}', fname], stdout=subprocess.DEVNULL)
-        uid = os.listdir(curation)[0]
-        if not util.validate_uuid(uid):
-            pcolor('red', f'\nError: Root folder in {fname} not a valid UUID. Skipped.')
-            return
-        path = os.path.join(curation, uid)
+        path = os.path.join(tmp, 'curation')
+        subprocess.check_call(['bin/7za', 'x', f'-o{path}', fname], stdout=subprocess.DEVNULL)
+        entries = os.listdir(path)
+        if len(entries) == 1: # must be root folder
+            uid = entries[0]
+            if not util.validate_uuid(uid):
+                pcolor('red', f'\nError: Root folder in {fname} not a valid UUID. Skipped.')
+                return
+            path = os.path.join(path, uid)
+        else:
+            uid, _ = os.path.splitext(os.path.basename(fname))
+            if not util.validate_uuid(uid):
+                pcolor('red', f'\nError: No root folder in {fname} and archive filename not a valid UUID. Skipped.')
+                return
+            if util.is_gamezip(entries):
+                path = os.path.join(path, 'content')
         try:
             self.process_game_from_path(uid, path, from_db)
         finally:

@@ -47,6 +47,9 @@ def extension(fname, extensions):
         return m.group(1)[1:]
     return None
 
+def is_gamezip(entries):
+    return set(entries) == {'content', 'content.json'}
+
 def prompt(text, default=False):
     default_dict = {
         True: '[Y/n]',

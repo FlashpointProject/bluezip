@@ -108,7 +108,7 @@ def create_torrentzip(uid, platform, build_dir, dist_file):
         'uniqueId': uid,
         'platform': platform
     }
-    with open(os.path.join(build_dir, 'content.json'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(build_dir, 'content.json'), 'w', encoding='utf-8', newline='\r\n') as f:
         json.dump(content_meta, f, indent=4)
     with zipfile.ZipFile(dist_file, 'w') as z:
         for r, _, f in os.walk(build_dir):

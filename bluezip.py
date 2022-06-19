@@ -14,6 +14,7 @@ import socket
 import json
 import time
 import sys
+import stat
 import re
 import os
 
@@ -148,6 +149,11 @@ def rollback(db, session):
     db.execute('UPDATE session SET rollback = ? WHERE id = ?', (session, prev_session))
     db.commit()
 
+def remove_readonly(func, path, _):
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 class Bluezip:
     def __init__(self, db, settings, session, args):
         self.db = db
@@ -217,7 +223,7 @@ class Bluezip:
             pcolor('red', f'Error: {e} when storing {game.title}. Skipped.')
             return
         self.db.commit()
-        shutil.rmtree(tmp)
+        shutil.rmtree(tmp, onerror=remove_readonly)
         if revision == 1:
             self.cleanup_obsolete(game, sha256)
 

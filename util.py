@@ -91,7 +91,7 @@ def no_color():
     global pcolor
     pcolor = pcolor_off
 
-def shutil_move(src, dst, copy_function=copy2, rmtree_onerror=None):
+def shutil_move(src, dst, copy_function=shutil.copy2, rmtree_onerror=None):
     """Recursively move a file or directory to another location. This is
     similar to the Unix "mv" command. Return the file or directory's
     destination.

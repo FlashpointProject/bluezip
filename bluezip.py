@@ -9,10 +9,10 @@ import hashlib
 import getpass
 import zipfile
 import fnmatch
-import shutil
 import socket
 import json
 import time
+import shutil
 import sys
 import stat
 import re
@@ -195,10 +195,10 @@ class Bluezip:
         c.execute('SELECT revision, sha256, title FROM game WHERE id = ? ORDER BY revision DESC LIMIT 1', (game.uid,))
         revision, prev_sha256, prev_title = c.fetchone() or (1, None, None)
         os.mkdir(build_dir)
-        shutil.move(game.content_path, os.path.join(build_dir, 'content'))
+        util.shutil_move(game.content_path, os.path.join(build_dir, 'content'), rmtree_onerror=remove_readonly)
         sha256 = create_torrentzip(game.uid, game.platform, build_dir, dist)
         outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
-        shutil.move(dist, outfile)
+        util.shutil_move(dist, outfile, rmtree_onerror=remove_readonly)
         if prev_sha256:
             if prev_sha256 == sha256:
                 pcolor('green', 'no change')

@@ -9,7 +9,6 @@ import hashlib
 import getpass
 import zipfile
 import fnmatch
-import shutil
 import socket
 import json
 import time
@@ -23,6 +22,7 @@ import bluezip_dat
 import bluezip_hook
 from util import TermColor, pcolor
 import util
+import shutil_modded as shutil
 
 DATABASE_VERSION = '1'
 DIST_DIR = os.path.abspath('dist')
@@ -195,7 +195,7 @@ class Bluezip:
         c.execute('SELECT revision, sha256, title FROM game WHERE id = ? ORDER BY revision DESC LIMIT 1', (game.uid,))
         revision, prev_sha256, prev_title = c.fetchone() or (1, None, None)
         os.mkdir(build_dir)
-        shutil.move(game.content_path, os.path.join(build_dir, 'content'))
+        shutil.move(game.content_path, os.path.join(build_dir, 'content'), rmtree_onerror=remove_readonly)
         sha256 = create_torrentzip(game.uid, game.platform, build_dir, dist)
         outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
         shutil.move(dist, outfile)

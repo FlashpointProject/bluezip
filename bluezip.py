@@ -71,7 +71,6 @@ class Settings:
 class Game:
     uid: str
     title: str
-    platform: str
     content_path: str
 
 def game_from_curation(uid, curation):
@@ -87,27 +86,25 @@ def game_from_curation(uid, curation):
             meta = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ValueError('Malformed metadata') from e
-    if not 'Title' in meta or not 'Platform' in meta:
+    if not 'Title' in meta:
         raise ValueError('Incomplete metadata')
-    return Game(uid, meta['Title'], meta['Platform'], content)
+    return Game(uid, meta['Title'], content)
 
 def game_from_fp_database(uid, content_path):
     fp_db = util.open_db()
     c = fp_db.cursor()
-    c.execute('SELECT title, platform FROM game WHERE id = ?', (uid,))
+    c.execute('SELECT title FROM game WHERE id = ?', (uid,))
     game = c.fetchone()
     fp_db.close()
     if not game:
         raise ValueError(f'No game found by UUID: {uid}')
 
-    title, platform = game
-    return Game(uid, title, platform, content_path)
+    return Game(uid, game[0], content_path)
 
-def create_torrentzip(uid, platform, build_dir, dist_file):
+def create_torrentzip(uid, build_dir, dist_file):
     content_meta = {
         'version': 1,
-        'uniqueId': uid,
-        'platform': platform
+        'uniqueId': uid
     }
     with open(os.path.join(build_dir, 'content.json'), 'w', encoding='utf-8', newline='\r\n') as f:
         json.dump(content_meta, f, indent=4)
@@ -196,7 +193,7 @@ class Bluezip:
         revision, prev_sha256, prev_title = c.fetchone() or (1, None, None)
         os.mkdir(build_dir)
         shutil.move(game.content_path, os.path.join(build_dir, 'content'))
-        sha256 = create_torrentzip(game.uid, game.platform, build_dir, dist)
+        sha256 = create_torrentzip(game.uid, build_dir, dist)
         outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
         shutil.move(dist, outfile)
         if prev_sha256:
@@ -218,7 +215,7 @@ class Bluezip:
         if prev_title and prev_title != game.title:
             pcolor('yellow', f'Warning: {game.uid} has been renamed ({prev_title} -> {game.title})')
         try:
-            self.db.execute('INSERT INTO game VALUES (?,?,?,?,?,?)', (game.uid, revision, sha256, game.title, game.platform, self.session))
+            self.db.execute('INSERT INTO game VALUES (?,?,?,?,?,?)', (game.uid, revision, sha256, game.title, "unused", self.session))
         except sqlite3.IntegrityError as e:
             pcolor('red', f'Error: {e} when storing {game.title}. Skipped.')
             return

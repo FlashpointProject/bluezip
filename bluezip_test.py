@@ -59,9 +59,8 @@ class Test_game_from_curation(TestTempFile):
     def test_integrity(self):
         self.mkdir('content')
         title = 'Alien Hominid'
-        platform = 'Flash'
-        meta = { 'Title': title, 'Platform': platform }
-        expect = bluezip.Game(RANDOM_UUID, title, platform, self.join('content'))
+        meta = { 'Title': title }
+        expect = bluezip.Game(RANDOM_UUID, title, self.join('content'))
         with open(self.join('meta.yaml'), 'w') as f:
             yaml.dump(meta, f)
         game = bluezip.game_from_curation(RANDOM_UUID, self.cwd)
@@ -94,7 +93,7 @@ class Test_create_torrentzip(TestTempFile):
         self.write('game.swf')
         self.write('assets/data.xml')
         self.mkdir('music')
-        digest = bluezip.create_torrentzip(RANDOM_UUID, 'Flash', build, dist)
+        digest = bluezip.create_torrentzip(RANDOM_UUID, build, dist)
         self.assertEqual(expect, digest.hex())
 
 if __name__ == '__main__':

@@ -234,7 +234,7 @@ class Bluezip:
     def process_archive(self, fname, from_db=False):
         tmp = tempfile.mkdtemp()
         path = os.path.join(tmp, 'curation')
-        subprocess.check_call(['bin/7za', 'x', f'-o{path}', fname], stdout=subprocess.DEVNULL)
+        subprocess.check_call(['./bin/7za', 'x', f'-o{path}', fname], stdout=subprocess.DEVNULL)
         entries = os.listdir(path)
         if len(entries) == 1: # must be root folder
             uid = entries[0]

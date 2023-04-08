@@ -225,6 +225,7 @@ class Bluezip:
             self.cleanup_obsolete(game, sha256)
 
     def process_game_from_path(self, uid, path, from_db):
+        print('proccing')
         if from_db:
             game = game_from_fp_database(uid, path)
         else:
@@ -255,6 +256,7 @@ class Bluezip:
             shutil.rmtree(tmp)
 
     def process_auto(self, path, from_db=False):
+        print('auto')
         kind = 'Content' if from_db else 'Curation'
         fname = os.path.basename(path)
         exts = self.settings['archive_extensions'].split(',')
@@ -328,6 +330,7 @@ def main():
     except FileExistsError:
         pass
 
+    print(args.path)
     bluezip = Bluezip(db, settings, session, args)
     if args.path:
         if args.batch:

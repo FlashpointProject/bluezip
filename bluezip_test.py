@@ -81,7 +81,7 @@ class Test_game_from_fp_db(unittest.TestCase):
         util.open_db.return_value = self.db
         args = (RANDOM_UUID, 'Alien Hominid', 'Flash')
         self.db.execute('INSERT INTO game VALUES (?,?,?)', args)
-        expect = bluezip.Game(*args, '')
+        expect = bluezip.Game(*args[:-1], '')
         self.assertEqual(expect, bluezip.game_from_fp_database(RANDOM_UUID, ''))
 
 class Test_create_torrentzip(TestTempFile):

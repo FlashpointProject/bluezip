@@ -239,15 +239,9 @@ class Bluezip:
         entries = os.listdir(path)
         if len(entries) == 1: # must be root folder
             uid = entries[0]
-            if not util.validate_uuid(uid):
-                pcolor('red', f'\nError: Root folder in {fname} not a valid UUID. Skipped.')
-                return
             path = os.path.join(path, uid)
         else:
             uid, _ = os.path.splitext(os.path.basename(fname))
-            if not util.validate_uuid(uid):
-                pcolor('red', f'\nError: No root folder in {fname} and archive filename not a valid UUID. Skipped.')
-                return
             if util.is_gamezip(entries):
                 path = os.path.join(path, 'content')
         try:

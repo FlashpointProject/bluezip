@@ -71,7 +71,6 @@ class Settings:
 class Game:
     uid: str
     title: str
-    platform: str
     content_path: str
 
 def game_from_curation(uid, curation):
@@ -87,27 +86,25 @@ def game_from_curation(uid, curation):
             meta = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ValueError('Malformed metadata') from e
-    if not 'Title' in meta or not 'Platform' in meta:
+    if not 'Title' in meta:
         raise ValueError('Incomplete metadata')
-    return Game(uid, meta['Title'], meta['Platform'], content)
+    return Game(uid, meta['Title'], content)
 
 def game_from_fp_database(uid, content_path):
     fp_db = util.open_db()
     c = fp_db.cursor()
-    c.execute('SELECT title, platform FROM game WHERE id = ?', (uid,))
+    c.execute('SELECT title FROM game WHERE id = ?', (uid,))
     game = c.fetchone()
     fp_db.close()
     if not game:
         raise ValueError(f'No game found by UUID: {uid}')
 
-    title, platform = game
-    return Game(uid, title, platform, content_path)
+    return Game(uid, game[0], content_path)
 
-def create_torrentzip(uid, platform, build_dir, dist_file):
+def create_torrentzip(uid, build_dir, dist_file):
     content_meta = {
         'version': 1,
-        'uniqueId': uid,
-        'platform': platform
+        'uniqueId': uid
     }
     with open(os.path.join(build_dir, 'content.json'), 'w', encoding='utf-8', newline='\r\n') as f:
         json.dump(content_meta, f, indent=4)
@@ -196,7 +193,7 @@ class Bluezip:
         revision, prev_sha256, prev_title = c.fetchone() or (1, None, None)
         os.mkdir(build_dir)
         shutil.move(game.content_path, os.path.join(build_dir, 'content'))
-        sha256 = create_torrentzip(game.uid, game.platform, build_dir, dist)
+        sha256 = create_torrentzip(game.uid, build_dir, dist)
         outfile = os.path.join(DIST_DIR, f'{game.uid}.zip')
         shutil.move(dist, outfile)
         if prev_sha256:
@@ -218,7 +215,7 @@ class Bluezip:
         if prev_title and prev_title != game.title:
             pcolor('yellow', f'Warning: {game.uid} has been renamed ({prev_title} -> {game.title})')
         try:
-            self.db.execute('INSERT INTO game VALUES (?,?,?,?,?,?)', (game.uid, revision, sha256, game.title, game.platform, self.session))
+            self.db.execute('INSERT INTO game VALUES (?,?,?,?,?,?)', (game.uid, revision, sha256, game.title, "unused", self.session))
         except sqlite3.IntegrityError as e:
             pcolor('red', f'Error: {e} when storing {game.title}. Skipped.')
             return
@@ -228,6 +225,7 @@ class Bluezip:
             self.cleanup_obsolete(game, sha256)
 
     def process_game_from_path(self, uid, path, from_db):
+        print('proccing')
         if from_db:
             game = game_from_fp_database(uid, path)
         else:
@@ -237,19 +235,13 @@ class Bluezip:
     def process_archive(self, fname, from_db=False):
         tmp = tempfile.mkdtemp()
         path = os.path.join(tmp, 'curation')
-        subprocess.check_call(['bin/7za', 'x', f'-o{path}', fname], stdout=subprocess.DEVNULL)
+        subprocess.check_call(['./bin/7za', 'x', f'-o{path}', fname], stdout=subprocess.DEVNULL)
         entries = os.listdir(path)
         if len(entries) == 1: # must be root folder
             uid = entries[0]
-            if not util.validate_uuid(uid):
-                pcolor('red', f'\nError: Root folder in {fname} not a valid UUID. Skipped.')
-                return
             path = os.path.join(path, uid)
         else:
             uid, _ = os.path.splitext(os.path.basename(fname))
-            if not util.validate_uuid(uid):
-                pcolor('red', f'\nError: No root folder in {fname} and archive filename not a valid UUID. Skipped.')
-                return
             if util.is_gamezip(entries):
                 path = os.path.join(path, 'content')
         try:
@@ -258,6 +250,7 @@ class Bluezip:
             shutil.rmtree(tmp)
 
     def process_auto(self, path, from_db=False):
+        print('auto')
         kind = 'Content' if from_db else 'Curation'
         fname = os.path.basename(path)
         exts = self.settings['archive_extensions'].split(',')
@@ -331,6 +324,7 @@ def main():
     except FileExistsError:
         pass
 
+    print(args.path)
     bluezip = Bluezip(db, settings, session, args)
     if args.path:
         if args.batch:

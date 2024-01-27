@@ -18,7 +18,7 @@ import stat
 import re
 import os
 
-import yaml
+from ruamel.yaml import YAML
 import bluezip_dat
 import bluezip_hook
 from util import TermColor, pcolor
@@ -83,7 +83,8 @@ def game_from_curation(uid, curation):
 
     with open(meta, 'r', encoding='utf-8') as f:
         try:
-            meta = yaml.safe_load(f)
+            yaml = YAML(typ="safe")
+            meta: dict = yaml.load(f)
         except yaml.YAMLError as e:
             raise ValueError('Malformed metadata') from e
     if not 'Title' in meta:
